@@ -111,3 +111,16 @@ document.addEventListener("DOMContentLoaded", () => {
     sections.forEach(section => sectionObserver.observe(section));
   }
 });
+
+
+// RytinTech intro loader: fade out after the page and its assets finish loading.
+const introLoader = document.querySelector(".intro-loader");
+if (introLoader) {
+  window.addEventListener("load", () => {
+    window.setTimeout(() => introLoader.classList.add("done"), 1350);
+  });
+  // Fallback in case the load event has already fired before this script runs.
+  if (document.readyState === "complete") {
+    window.setTimeout(() => introLoader.classList.add("done"), 1350);
+  }
+}
