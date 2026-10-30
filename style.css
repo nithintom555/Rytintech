@@ -138,3 +138,37 @@ body, .nav-links a, .brand, .hero h1, .about-copy h2, .section-heading h2,
 .outline-button { color: #171714; border-color: #171714; }
 .footer-bottom { color: #62625a; }
 .back-top { color: #171714; }
+
+
+/* ===== RYTINTECH INTRO LOADER ===== */
+.intro-loader{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  background:#111;
+  color:#fff;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  transition:opacity .8s ease, visibility .8s ease;
+}
+.intro-loader.done{opacity:0;visibility:hidden;pointer-events:none}
+.loader-word{
+  font-family:Manrope, sans-serif;
+  font-size:clamp(38px,7vw,80px);
+  font-weight:800;
+  letter-spacing:-.06em;
+  clip-path:inset(0 100% 0 0);
+  animation:loaderText 1.5s cubic-bezier(.77,0,.18,1) .15s forwards;
+}
+.loader-word::after{content:".";color:#8585ff}
+.loader-line{width:150px;height:1px;background:#333;margin-top:22px;overflow:hidden}
+.loader-line span{display:block;width:100%;height:100%;background:#fff;transform:translateX(-100%);animation:loaderLine 1.4s ease .2s forwards}
+@keyframes loaderText{to{clip-path:inset(0 0 0 0)}}
+@keyframes loaderLine{to{transform:translateX(0)}}
+@media(prefers-reduced-motion:reduce){
+  .loader-word{clip-path:none;animation:none}
+  .loader-line span{transform:none;animation:none}
+  .intro-loader{transition:none}
+}
