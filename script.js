@@ -1,71 +1,113 @@
-/* RYTINTECH — script.js (vanilla JS, no libraries) */
-(function () {
-  var body = document.body;
-  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+// RytinTech — interactive features
+document.addEventListener("DOMContentLoaded", () => {
+  const menuToggle = document.querySelector(".menu-toggle");
+  const navLinks = document.querySelector(".nav-links");
 
-  // 1. Opening animation: reveal site after ~1.4s
-  function ready() { body.classList.remove('loading'); body.classList.add('ready'); }
-  window.addEventListener('load', function () { setTimeout(ready, reduce ? 0 : 1400); });
-  setTimeout(ready, 3500); // safety fallback
-
-  // 2. Nav: solid background after scrolling, parallax on hero image
-  var nav = document.getElementById('nav');
-  var heroImg = document.getElementById('heroImg');
-  var steps = document.querySelectorAll('.step');
-  var stepList = document.querySelector('.steps');
-  var ticking = false;
-
-  function onScroll() {
-    var y = window.scrollY;
-    nav.classList.toggle('solid', y > 60);
-    if (!reduce && heroImg && y < window.innerHeight * 1.2) {
-      heroImg.style.transform = 'translateY(' + (y * 0.25) + 'px)';
-    }
-    // process line progress
-    if (stepList) {
-      var r = stepList.getBoundingClientRect();
-      var p = (window.innerHeight * 0.75 - r.top) / r.height;
-      stepList.style.setProperty('--p', Math.max(0, Math.min(1, p)));
-    }
-    ticking = false;
-  }
-  window.addEventListener('scroll', function () {
-    if (!ticking) { requestAnimationFrame(onScroll); ticking = true; }
-  }, { passive: true });
-  onScroll();
-
-  // 3. Scroll reveal (sections, and process steps one by one)
-  var io = new IntersectionObserver(function (entries) {
-    entries.forEach(function (e) {
-      if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
-    });
-  }, { threshold: 0.15 });
-  document.querySelectorAll('.reveal').forEach(function (el, i) {
-    el.style.transitionDelay = (i % 4) * 90 + 'ms';
-    io.observe(el);
+  // Mobile navigation
+  menuToggle.addEventListener("click", () => {
+    const isOpen = navLinks.classList.toggle("open");
+    menuToggle.setAttribute("aria-expanded", String(isOpen));
+    menuToggle.textContent = isOpen ? "×" : "☰";
   });
-  var stepIO = new IntersectionObserver(function (entries) {
-    entries.forEach(function (e) {
-      if (e.isIntersecting) {
-        var i = Array.prototype.indexOf.call(steps, e.target);
-        e.target.style.transitionDelay = (reduce ? 0 : i * 120) + 'ms';
-        e.target.classList.add('on');
-        stepIO.unobserve(e.target);
+
+  navLinks.querySelectorAll("a").forEach(link => {
+    link.addEventListener("click", () => {
+      navLinks.classList.remove("open");
+      menuToggle.setAttribute("aria-expanded", "false");
+      menuToggle.textContent = "☰";
+    });
+  });
+
+  // Reveal elements when they enter the viewport
+  const revealItems = document.querySelectorAll(".reveal");
+  if ("IntersectionObserver" in window) {
+    const observer = new IntersectionObserver((entries, obs) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("visible");
+          obs.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12 });
+    revealItems.forEach(item => observer.observe(item));
+  } else {
+    revealItems.forEach(item => item.classList.add("visible"));
+  }
+
+  // Project category filters
+  const filterButtons = document.querySelectorAll(".filter-btn");
+  const projectCards = document.querySelectorAll(".project-card");
+  filterButtons.forEach(button => {
+    button.addEventListener("click", () => {
+      filterButtons.forEach(btn => btn.classList.remove("active"));
+      button.classList.add("active");
+      const filter = button.dataset.filter;
+      projectCards.forEach(card => {
+        const show = filter === "all" || card.dataset.category === filter;
+        card.classList.toggle("is-hidden", !show);
+      });
+    });
+  });
+
+  // Package buttons prefill the contact form's service/message
+  document.querySelectorAll("[data-package]").forEach(button => {
+    button.addEventListener("click", () => {
+      const messageField = document.getElementById("message");
+      const packageName = button.dataset.package;
+      if (messageField && !messageField.value.trim()) {
+        messageField.value = `I'm interested in the ${packageName} package. Please share more details.`;
       }
     });
-  }, { threshold: 0.4 });
-  steps.forEach(function (s) { stepIO.observe(s); });
+  });
 
-  // 4. Mobile menu
-  var burger = document.getElementById('burger');
-  var menu = document.getElementById('menu');
-  function setMenu(open) {
-    menu.classList.toggle('open', open);
-    burger.setAttribute('aria-expanded', open);
-    burger.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
-    body.style.overflow = open ? 'hidden' : '';
+  // Contact form: opens WhatsApp with a prefilled message (no database is used).
+  const form = document.getElementById("contactForm");
+  form.addEventListener("submit", event => {
+    event.preventDefault();
+    const name = document.getElementById("name").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const phone = document.getElementById("phone").value.trim();
+    const service = document.getElementById("service").value;
+    const message = document.getElementById("message").value.trim();
+    const status = document.getElementById("formStatus");
+
+    if (!name || !email || !service || !message) {
+      status.textContent = "Please fill in your name, email, service and project details.";
+      return;
+    }
+
+    const text = [
+      "Hello RytinTech! I'd like to enquire about a project.",
+      "",
+      `Name: ${name}`,
+      `Email: ${email}`,
+      `Phone: ${phone || "Not provided"}`,
+      `Service: ${service}`,
+      `Project details: ${message}`
+    ].join("\n");
+
+    // RytinTech WhatsApp contact number.
+    const whatsappNumber = "919778129429";
+    const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(text)}`;
+    status.textContent = "Opening WhatsApp with your enquiry…";
+    window.open(url, "_blank", "noopener,noreferrer");
+  });
+
+  // Dynamic footer year
+  document.getElementById("year").textContent = new Date().getFullYear();
+
+  // Highlight current navigation section
+  const sections = document.querySelectorAll("main section[id]");
+  if ("IntersectionObserver" in window) {
+    const sectionObserver = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          navLinks.querySelectorAll("a").forEach(link => {
+            link.classList.toggle("active", link.getAttribute("href") === `#${entry.target.id}`);
+          });
+        }
+      });
+    }, { rootMargin: "-35% 0px -55% 0px" });
+    sections.forEach(section => sectionObserver.observe(section));
   }
-  burger.addEventListener('click', function () { setMenu(!menu.classList.contains('open')); });
-  menu.querySelectorAll('a').forEach(function (a) { a.addEventListener('click', function () { setMenu(false); }); });
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setMenu(false); });
-})();
+});
